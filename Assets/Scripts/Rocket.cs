@@ -9,6 +9,7 @@ public class Rocket : MonoBehaviour
     [SerializeField] private float levelLoadDelay = 2f;
     [SerializeField] private AudioClip mainEngine;
     [SerializeField] private AudioClip deathSound;
+    [SerializeField] private AudioClip deathSound2;
     [SerializeField] private AudioClip levelLoad;
 
     [SerializeField] private ParticleSystem mainEngineParticles;
@@ -17,6 +18,7 @@ public class Rocket : MonoBehaviour
 
     Rigidbody rigidbody;
     AudioSource audioSource;
+    private Animator _animator;
 
     enum State { Alive, Dying, Transcending }
     State state = State.Alive;
@@ -26,6 +28,7 @@ public class Rocket : MonoBehaviour
     {
         rigidbody = GetComponent<Rigidbody>();
         audioSource = GetComponent<AudioSource>();
+        _animator = GetComponentInChildren<Animator>();
     }
 
     // Update is called once per frame
@@ -77,7 +80,7 @@ public class Rocket : MonoBehaviour
     private void Defeat()
     {
         audioSource.Stop();
-        audioSource.volume = 0.25f; 
+        audioSource.PlayOneShot(deathSound2);
         audioSource.PlayOneShot(deathSound);
         deathParticles.Play();
         state = State.Dying;
@@ -95,6 +98,7 @@ public class Rocket : MonoBehaviour
 
     private void LoadFirstLevel()
     {
+        mainEngineParticles.Stop();
         SceneManager.LoadScene(0);
     }
 
@@ -119,18 +123,26 @@ public class Rocket : MonoBehaviour
         else
         {
             audioSource.Stop();
+            audioSource.volume = 1f; 
+
             mainEngineParticles.Stop();
+            _animator.speed = 0.2f;
         }
     }
 
     private void ApplyThrust()
     {
         rigidbody.AddRelativeForce(Vector3.up * (mainThrust * Time.deltaTime));
+        
         if (!audioSource.isPlaying)
         {
+            audioSource.volume = 0.4f; 
             audioSource.PlayOneShot(mainEngine);
         }
         mainEngineParticles.Play();
+        
+        _animator.speed = 1f;
+        _animator.SetBool("Run", true);
     }
 
     private void HandleRotate()
